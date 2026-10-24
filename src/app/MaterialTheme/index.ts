@@ -1,7 +1,7 @@
 import { createTheme } from "@mui/material/styles";
 import { common } from "@mui/material/colors";
-import shadow from "./MaterialTheme/shadow";
-import typography from "./MaterialTheme/typography";
+import shadow from "./shadow";
+import typography from "./typography";
 import { maxWidth } from "@mui/system";
 
 /**
