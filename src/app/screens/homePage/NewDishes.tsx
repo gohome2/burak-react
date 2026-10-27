@@ -70,14 +70,3 @@ export default function NewDishes() {
     </div>
   );
 }
-
-
-/////
-           <CssVarsProvider>
-              {newDishes.length !== 0 ? (
-                newDishes.map((ele, index) => {
-                  return ()
-              ) : (
-                <Box className="no-data">New products are not available!</Box>
-              )}
-            </CssVarsProvider>
