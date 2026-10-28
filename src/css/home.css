@@ -75,7 +75,7 @@
 
 .homepage .popular-dishes-frame .popular-section .cards-frame {
   width: 100%;
-  margin-top: 43px;
+  margin-top: 110px;
   display: flex;
   flex-direction: row;
   justify-content: space-between;
@@ -295,7 +295,7 @@
   width: 305px;
   height: 302px;
 
-  border-radius: 12px 12px 0px 0px;
+  border-radius: 12px 12px 4px 4px;
 }
 
 .homepage .cards-frame .member-nickname {
