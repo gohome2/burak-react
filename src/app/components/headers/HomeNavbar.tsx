@@ -92,7 +92,7 @@ export default function HomeNavbar() {
                 <Button
                   variant={"contained"}
                   className={"signup-button"}
-                  onClick={buttonhandler}
+                  onClick={buttonHandler}
                 >
                   SIGN UP
                 </Button>
