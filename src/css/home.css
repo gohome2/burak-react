@@ -50,7 +50,8 @@
 
 .homepage .popular-dishes-frame {
   width: 100%;
-  height: 580px;
+  min-height: 580px;
+  padding-bottom: 60px;
   display: flex;
   background: #f8f8ff;
 }
@@ -75,15 +76,22 @@
 
 .homepage .popular-dishes-frame .popular-section .cards-frame {
   width: 100%;
-  margin-top: 110px;
+  height: auto;
+  margin-top: 47px;
   display: flex;
   flex-direction: row;
+  flex-wrap: wrap;
+  gap: 24px;
+  align-items: stretch;
   justify-content: space-between;
 }
 
 .homepage .popular-dishes-frame .cards-frame .card {
+  flex: 1 1 240px;
+  max-width: 300px;
+  height: auto;
   min-height: 430px;
-  min-width: 300px;
+  min-width: 0;
   cursor: pointer;
 }
 
