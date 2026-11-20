@@ -176,8 +176,6 @@
   padding: 0 16px;
   border: 0;
   border-radius: 6px;
-  background-color: #d9b586;
-  color: #303030;
   font-family: inherit;
   font-size: 14px;
   font-weight: 600;
@@ -187,14 +185,7 @@
 }
 
 .products .dishes-filter-box > button:hover {
-  background-color: #c9a375;
   box-shadow: none;
-}
-
-.products .dishes-filter-box > button:first-child,
-.products .dishes-filter-box > button:first-child:hover {
-  background-color: #303030;
-  color: #d9b586;
 }
 
 /* Category sidebar and product grid */
@@ -228,8 +219,6 @@
   box-sizing: border-box;
   border: 0;
   border-radius: 6px;
-  background-color: #d9b586;
-  color: #303030;
   font-family: inherit;
   font-size: 14px;
   font-weight: 600;
@@ -242,14 +231,7 @@
 }
 
 .products .category-main > button:hover {
-  background-color: #c9a375;
   box-shadow: none;
-}
-
-.products .category-main > button:last-child,
-.products .category-main > button:last-child:hover {
-  background-color: #303030;
-  color: #d9b586;
 }
 
 .products .product-wrapper {
