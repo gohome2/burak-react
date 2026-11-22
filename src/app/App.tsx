@@ -8,19 +8,37 @@ import Footer from "./components/footer";
 import HomeNavbar from "./components/headers/HomeNavbar";
 import OtherNavbar from "./components/headers/OtherNavbar";
 import HelpPage from "./screens/helpPage";
+import useBasket from "./hooks/useBasket";
 import "../css/app.css";
 import "../css/navbar.css";
 import "../css/footer.css";
 
 function App() {
   const location = useLocation();
+  const { cartItems, onAdd, onRemove, onDelete, onDeleteAll } = useBasket();
   console.log("location", location);
   return (
     <>
-      {location.pathname === "/" ? <HomeNavbar /> : <OtherNavbar />}
+      {location.pathname === "/" ? (
+        <HomeNavbar
+          cartItems={cartItems}
+          onAdd={onAdd}
+          onRemove={onRemove}
+          onDelete={onDelete}
+          onDeleteAll={onDeleteAll}
+        />
+      ) : (
+        <OtherNavbar
+          cartItems={cartItems}
+          onAdd={onAdd}
+          onRemove={onRemove}
+          onDelete={onDelete}
+          onDeleteAll={onDeleteAll}
+        />
+      )}
       <Switch>
         <Route path="/products">
-          <ProductsPage />
+          <ProductsPage onAdd={onAdd} />
         </Route>
         <Route path="/orders">
           <OrdersPage />

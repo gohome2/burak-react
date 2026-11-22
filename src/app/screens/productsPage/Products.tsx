@@ -16,6 +16,7 @@ import { createSelector } from "reselect";
 import { retrieveProducts } from "./selector";
 import { Product, ProductInquiry } from "../../../lib/types/product";
 import ProductService from "../../services/ProductService";
+import { CartItem } from "../../../lib/types/search";
 import { ProductCollection } from "../../../lib/enums/product.enum";
 import { serverApi } from "../../../lib/config";
 import { useHistory } from "react-router-dom";
@@ -29,7 +30,12 @@ const productsRetriever = createSelector(retrieveProducts, (products) => ({
   products,
 }));
 
-export default function Products() {
+interface ProductsProps {
+  onAdd: (item: CartItem) => void;
+}
+
+export default function Products(props: ProductsProps) {
+  const { onAdd } = props;
   const { setProducts } = actionDispatch(useDispatch());
   const { products } = useSelector(productsRetriever);
   const [productSearch, setProductSearch] = useState<ProductInquiry>({
@@ -261,6 +267,16 @@ export default function Products() {
                         <Button
                           className={"shop-btn"}
                           aria-label={`Add ${product.productName} to cart`}
+                          onClick={(event) => {
+                            onAdd({
+                              _id: product._id,
+                              quantity: 1,
+                              name: product.productName,
+                              price: product.productPrice,
+                              image: product.productImages[0],
+                            });
+                            event.stopPropagation();
+                          }}
                         >
                           <img
                             src={"/icons/shopping-cart.svg"}
