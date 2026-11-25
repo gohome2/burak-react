@@ -1,31 +1,60 @@
-import { useState, SyntheticEvent } from "react";
+import { useEffect, useState, SyntheticEvent } from "react";
 import { Container, Stack, Box } from "@mui/material";
-import Tabs from "@mui/material/Tabs";
 import Tab from "@mui/material/Tab";
 import TabContext from "@mui/lab/TabContext";
+import TabList from "@mui/lab/TabList";
 import LocationOnIcon from "@mui/icons-material/LocationOn";
 import PausedOrders from "./PausedOrders";
 import ProcessOrders from "./ProcessOrders";
 import FinishedOrders from "./FinishedOrders";
 
 import { useDispatch } from "react-redux";
-import { Dispatch } from "@reduxjs/toolkit";
 import { setPausedOrders, setProcessOrders, setFinishedOrders } from "./slice";
-
-import "../../../css/order.css";
-import { Order } from "../../../lib/types/order";
-
-/** REDUX SLICE & SELECTOR */
-const actionDispatch = (dispatch: Dispatch) => ({
-  setPausedOrders: (data: Order[]) => dispatch(setPausedOrders(data)),
-  setProcessOrders: (data: Order[]) => dispatch(setProcessOrders(data)),
-  setFinishedOrders: (data: Order[]) => dispatch(setFinishedOrders(data)),
-});
+import { useGlobals } from "../../hooks/useGlobals";
+import OrderService from "../../services/OrderService";
+import { OrderStatus } from "../../../lib/enums/order.enum";
+import { OrderInquiry } from "../../../lib/types/order";
+import "../../../css/orders.css";
 
 export default function OrdersPage() {
-  const { setPausedOrders, setProcessOrders, setFinishedOrders } =
-    actionDispatch(useDispatch());
+  const dispatch = useDispatch();
+  const { authMember, orderBuilder } = useGlobals();
   const [value, setValue] = useState("1");
+  const [orderInquiry] = useState<OrderInquiry>({
+    page: 1,
+    limit: 5,
+    orderStatus: OrderStatus.PAUSE,
+  });
+
+  useEffect(() => {
+    if (!authMember) {
+      dispatch(setPausedOrders([]));
+      dispatch(setProcessOrders([]));
+      dispatch(setFinishedOrders([]));
+      return;
+    }
+
+    let active = true;
+    const order = new OrderService();
+    const orderLists = [
+      { status: OrderStatus.PAUSE, setOrders: setPausedOrders },
+      { status: OrderStatus.PROCESS, setOrders: setProcessOrders },
+      { status: OrderStatus.FINISH, setOrders: setFinishedOrders },
+    ];
+
+    orderLists.forEach(({ status, setOrders }) => {
+      order
+        .getMyOrders({ ...orderInquiry, orderStatus: status })
+        .then((data) => {
+          if (active) dispatch(setOrders(data));
+        })
+        .catch((err) => console.log(err));
+    });
+
+    return () => {
+      active = false;
+    };
+  }, [authMember, dispatch, orderInquiry, orderBuilder]);
 
   /** HANDLERS **/
 
@@ -40,37 +69,21 @@ export default function OrdersPage() {
           <TabContext value={value}>
             <Box className={"order-nav-frame"}>
               <Box sx={{ borderBottom: 1, borderColor: "divider" }}>
-                <Tabs
-                  value={value}
+                <TabList
                   onChange={handleChange}
                   aria-label="Order status"
                   className={"table_list"}
                 >
-                  <Tab
-                    label="PAUSED ORDERS"
-                    value={"1"}
-                    id="order-tab-1"
-                    aria-controls="order-panel-1"
-                  />
-                  <Tab
-                    label="PROCESS ORDERS"
-                    value={"2"}
-                    id="order-tab-2"
-                    aria-controls="order-panel-2"
-                  />
-                  <Tab
-                    label="FINISHED ORDERS"
-                    value={"3"}
-                    id="order-tab-3"
-                    aria-controls="order-panel-3"
-                  />
-                </Tabs>
+                  <Tab label="PAUSED ORDERS" value="1" />
+                  <Tab label="PROCESS ORDERS" value="2" />
+                  <Tab label="FINISHED ORDERS" value="3" />
+                </TabList>
               </Box>
             </Box>
 
             <Stack className={"order-main-content"}>
-              <PausedOrders />
-              <ProcessOrders />
+              <PausedOrders setValue={setValue} />
+              <ProcessOrders setValue={setValue} />
               <FinishedOrders />
             </Stack>
           </TabContext>
@@ -93,7 +106,7 @@ export default function OrdersPage() {
                   />
                 </div>
               </div>
-              <span className={"order-user-name"}>Martin</span>
+              <span className={"order-user-name"}>{authMember?.memberNick}</span>
               <span className={"order-user-prof"}>User</span>
             </Box>
 
@@ -101,21 +114,12 @@ export default function OrdersPage() {
 
             <Box className={"order-user-address"}>
               <LocationOnIcon aria-hidden="true" />
-              <span>South Korea, Busan</span>
+              <span>{authMember?.memberAddress || "Do not exist"}</span>
             </Box>
-            <p className="order-status-note">Demo profile</p>
           </Box>
 
           <Box className={"order-payment-box"}>
-            <h2 className="payment-title">Payment details</h2>
-            <div className="payment-methods" aria-label="Payment methods">
-              <img src="/icons/visa-card.svg" alt="Visa" />
-              <img src="/icons/master-card.svg" alt="Mastercard" />
-              <img src="/icons/paypal-card.svg" alt="PayPal" />
-              <img src="/icons/western-card.svg" alt="Western Union" />
-            </div>
-
-            <dl className="payment-fields">
+            <dl className="payment-fields" aria-label="Sample payment details">
               <div className="payment-field payment-field--wide">
                 <dt>Card number</dt>
                 <dd className="payment-value">•••• •••• •••• ••••</dd>
@@ -133,9 +137,12 @@ export default function OrdersPage() {
                 <dd className="payment-value">Demo user</dd>
               </div>
             </dl>
-            <p className="order-status-note">
-              Demo only. No payment information is collected.
-            </p>
+            <div className="payment-methods" aria-label="Payment methods">
+              <img src="/icons/western-card.svg" alt="Western Union" />
+              <img src="/icons/master-card.svg" alt="Mastercard" />
+              <img src="/icons/paypal-card.svg" alt="PayPal" />
+              <img src="/icons/visa-card.svg" alt="Visa" />
+            </div>
           </Box>
         </Stack>
       </Container>

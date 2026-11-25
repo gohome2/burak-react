@@ -1,132 +1,129 @@
-import { useState } from "react";
 import { Box, Button, Stack } from "@mui/material";
 import moment from "moment";
-
-type OrderStatus = "paused" | "process" | "finished";
-
-interface DemoItem {
-  name: string;
-  image: string;
-  price: number;
-  quantity: number;
-}
-
-/* Sample data only: replace this with real order data when an API is available. */
-const demoItems: DemoItem[] = [
-  { name: "Lavash", image: "/img/lavash.webp", price: 10, quantity: 2 },
-  { name: "Kebab", image: "/img/kebab.webp", price: 10, quantity: 2 },
-  { name: "Cutlet", image: "/img/cutlet.webp", price: 10, quantity: 2 },
-];
+import { serverApi } from "../../../lib/config";
+import { OrderStatus } from "../../../lib/enums/order.enum";
+import { Order } from "../../../lib/types/order";
+import { useGlobals } from "../../hooks/useGlobals";
 
 interface OrderListProps {
-  status: OrderStatus;
+  orders: Order[];
+  onCancel?: (orderId: string) => Promise<void>;
+  onPayment?: (orderId: string) => Promise<void>;
+  onVerify?: (orderId: string) => Promise<void>;
 }
 
-export default function OrderList({ status }: OrderListProps) {
-  const [message, setMessage] = useState("");
-  const showDemoMessage = (action: string) => {
-    setMessage(`${action} is a demo. The order service is not connected yet.`);
-  };
-  const productPrice = demoItems.reduce(
-    (sum, item) => sum + item.price * item.quantity,
-    0,
+export default function OrderList({
+  orders,
+  onCancel,
+  onPayment,
+  onVerify,
+}: OrderListProps) {
+  const { authMember } = useGlobals();
+  const memberOrders = orders.filter(
+    (order) => order.memberId === authMember?._id,
   );
-  const deliveryCost = 5;
-  const total = productPrice + deliveryCost;
+
+  if (!memberOrders.length) {
+    return (
+      <Box className="empty-state">
+        <img src="/icons/noimage-list.svg" alt="No orders found." />
+      </Box>
+    );
+  }
 
   return (
-    <Stack>
-      {demoItems.length > 0 ? (
-        <Box className="order-main-box">
+    <Stack spacing={3}>
+      {memberOrders.map((order) => (
+        <Box key={order._id} className="order-main-box">
           <Box className="order-box-scroll">
-            {demoItems.map((item) => (
-              <Box
-                key={item.name}
-                className="orders-name-price"
-                role="group"
-                aria-label={`${item.name}: $${item.price} each, quantity ${item.quantity}, total $${item.price * item.quantity}`}
-              >
-                <img
-                  src={item.image}
-                  className="order-dish-img"
-                  alt={item.name}
-                />
-                <p className="title-dish">{item.name}</p>
-                <Box className="price-box" aria-hidden="true">
-                  <p>${item.price}</p>
-                  <img src="/icons/close.svg" alt="" />
-                  <p>{item.quantity}</p>
-                  <img src="/icons/pause.svg" alt="" />
-                  <p>${item.price * item.quantity}</p>
+            {order.orderItems.map((item) => {
+              const product = order.productData.find(
+                (product) => product._id === item.productId,
+              );
+              const image = product?.productImages[0];
+              const itemTotal = item.itemPrice * item.itemQuantity;
+
+              return (
+                <Box key={item._id} className="orders-name-price">
+                  {image ? (
+                    <img
+                      src={`${serverApi}/${image}`}
+                      className="order-dish-img"
+                      alt=""
+                    />
+                  ) : (
+                    <span />
+                  )}
+                  <p className="title-dish">
+                    {product?.productName ?? "Product unavailable"}
+                  </p>
+                  <Box className="price-box">
+                    <p>${item.itemPrice}</p>
+                    <img src="/icons/close.svg" alt="×" />
+                    <p>{item.itemQuantity}</p>
+                    <img src="/icons/pause.svg" alt="=" />
+                    <p>${itemTotal}</p>
+                  </Box>
                 </Box>
-              </Box>
-            ))}
+              );
+            })}
           </Box>
 
-          <Box className="order-summary">
-            <div className="order-summary-row">
-              <span>Product price</span>
-              <span>${productPrice}</span>
-            </div>
-            <div className="order-summary-row">
-              <span>Delivery cost</span>
-              <span>${deliveryCost}</span>
-            </div>
-            <div className="order-summary-row">
-              <strong>Total</strong>
-              <strong>${total}</strong>
-            </div>
+          <Box className="order-footer">
+            <Box className="order-summary">
+              <div className="order-summary-row">
+                <span>Product price</span>
+                <span>${order.orderTotal - order.orderDelivery}</span>
+              </div>
+              <img src="/icons/plus.svg" alt="+" />
+              <div className="order-summary-row">
+                <span>{onCancel ? "Delivery cost" : "delivery cost"}</span>
+                <span>${order.orderDelivery}</span>
+              </div>
+              <img src="/icons/pause.svg" alt="=" />
+              <div className="order-summary-row">
+                <span>Total</span>
+                <span>${order.orderTotal}</span>
+              </div>
+            </Box>
+
+            <Box className="order-actions">
+              {order.orderStatus !== OrderStatus.PAUSE && (
+                <span className="order-date">
+                  {moment().format("YY-MM-DD HH:mm")}
+                </span>
+              )}
+              {onCancel && (
+                <Button
+                  className="cancel-button"
+                  variant="contained"
+                  onClick={() => onCancel(order._id)}
+                >
+                  Cancel
+                </Button>
+              )}
+              {onPayment && (
+                <Button
+                  className="pay-button"
+                  variant="contained"
+                  onClick={() => onPayment(order._id)}
+                >
+                  Payment
+                </Button>
+              )}
+              {onVerify && (
+                <Button
+                  className="verify-button"
+                  variant="contained"
+                  onClick={() => onVerify(order._id)}
+                >
+                  Verify to Fulfil
+                </Button>
+              )}
+            </Box>
           </Box>
-
-          {status === "process" && (
-            <p className="order-status-note">
-              {moment().format("YY-MM-DD HH:mm")}
-            </p>
-          )}
-
-          {status !== "finished" && (
-            <>
-              <Box className="order-actions">
-                {status === "paused" ? (
-                  <>
-                    <Button
-                      className="cancel-button"
-                      variant="contained"
-                      color="secondary"
-                      onClick={() => showDemoMessage("Cancel")}
-                    >
-                      Cancel
-                    </Button>
-                    <Button
-                      className="pay-button"
-                      variant="contained"
-                      onClick={() => showDemoMessage("Payment")}
-                    >
-                      Payment
-                    </Button>
-                  </>
-                ) : (
-                  <Button
-                    className="verify-button"
-                    variant="contained"
-                    onClick={() => showDemoMessage("Verify")}
-                  >
-                    Verify to Fulfil
-                  </Button>
-                )}
-              </Box>
-              <p className="order-status-note" aria-live="polite">
-                {message || ""}
-              </p>
-            </>
-          )}
         </Box>
-      ) : (
-        <Box className="empty-state">
-          <img src="/icons/noimage-list.svg" alt="" />
-          <p>No orders found.</p>
-        </Box>
-      )}
+      ))}
     </Stack>
   );
 }
