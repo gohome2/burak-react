@@ -14,9 +14,13 @@ import { useGlobals } from "../../hooks/useGlobals";
 import OrderService from "../../services/OrderService";
 import { OrderStatus } from "../../../lib/enums/order.enum";
 import { OrderInquiry } from "../../../lib/types/order";
+import { useHistory } from "react-router-dom";
+import { serverApi } from "../../../lib/config";
+import { MemberType } from "../../../lib/enums/member.enum";
 import "../../../css/orders.css";
 
 export default function OrdersPage() {
+  const history = useHistory();
   const dispatch = useDispatch();
   const { authMember, orderBuilder } = useGlobals();
   const [value, setValue] = useState("1");
@@ -62,6 +66,7 @@ export default function OrdersPage() {
     setValue(newValue);
   };
 
+  if (!authMember) history.push("/");
   return (
     <div className={"order-page"}>
       <Container className="order-container">
@@ -94,27 +99,35 @@ export default function OrdersPage() {
             <Box className={"member-box"}>
               <div className={"order-user-img"}>
                 <img
-                  src={"/icons/default-user.svg"}
+                  src={
+                    authMember?.memberImage
+                      ? `${serverApi}/${authMember.memberImage}`
+                      : "/icons/default-user.svg"
+                  }
                   className={"order-user-avatar"}
                   alt=""
                 />
                 <div className={"order-user-icon-box"}>
                   <img
-                    src={"/icons/user-badge.svg"}
+                    src={
+                      authMember?.memberType === MemberType.RESTAURANT
+                        ? "/icons/restaurant.svg"
+                        : "/icons/user-badge.svg"
+                    }
                     className={"order-user-prof-img"}
                     alt=""
                   />
                 </div>
               </div>
               <span className={"order-user-name"}>{authMember?.memberNick}</span>
-              <span className={"order-user-prof"}>User</span>
+              <span className={"order-user-prof"}>{authMember?.memberType}</span>
             </Box>
 
             <Box className={"liner"} />
 
             <Box className={"order-user-address"}>
               <LocationOnIcon aria-hidden="true" />
-              <span>{authMember?.memberAddress || "Do not exist"}</span>
+              <span>{authMember?.memberAddress ? authMember.memberAddress : "no address"}</span>
             </Box>
           </Box>
 
